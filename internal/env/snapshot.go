@@ -64,3 +64,20 @@ func (s *Snapshot) Merge(overlay map[string]string) *Snapshot {
 	}
 	return &Snapshot{vars: merged}
 }
+
+// Diff returns the keys whose values differ between s and other,
+// including keys present in one snapshot but not the other.
+func (s *Snapshot) Diff(other *Snapshot) []string {
+	var changed []string
+	for k, v := range s.vars {
+		if ov, ok := other.vars[k]; !ok || ov != v {
+			changed = append(changed, k)
+		}
+	}
+	for k := range other.vars {
+		if _, ok := s.vars[k]; !ok {
+			changed = append(changed, k)
+		}
+	}
+	return changed
+}
