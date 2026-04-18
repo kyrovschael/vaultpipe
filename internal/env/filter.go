@@ -52,3 +52,17 @@ func (d *DenyList) Filter(env []string) []string {
 	}
 	return out
 }
+
+// BlockedEntries returns all entries from env that are blocked by the DenyList.
+// env entries are expected in KEY=VALUE form. This is useful for logging or
+// auditing which variables were stripped before passing env to a child process.
+func (d *DenyList) BlockedEntries(env []string) []string {
+	var out []string
+	for _, entry := range env {
+		name, _, _ := strings.Cut(entry, "=")
+		if d.Blocked(name) {
+			out = append(out, entry)
+		}
+	}
+	return out
+}
