@@ -26,13 +26,19 @@ func newTestChecker(t *testing.T, handler http.Handler) *health.Checker {
 	return health.NewChecker(client)
 }
 
-func TestCheck_Healthy(t *testing.T) {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// healthHandler returns an http.HandlerFunc that responds with the given status
+// code and JSON body, setting Content-Type to application/json.
+func healthHandler(statusCode int, body string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(`{"initialized":true,"sealed":false,"standby":false,"version":"1.15.0"}`))
-	})
-	checker := newTestChecker(t, handler)
+		w.WriteHeader(statusCode)
+		_, _ = w.Write([]byte(body))
+	}
+}
+
+func TestCheck_Healthy(t *testing.T) {
+	checker := newTestChecker(t, healthHandler(http.StatusOK,
+		`{"initialized":true,"sealed":false,"standby":false,"version":"1.15.0"}`))
 	s := checker.Check(context.Background())
 	if !s.Healthy {
 		t.Fatalf("expected healthy, got error: %v", s.Error)
@@ -43,12 +49,8 @@ func TestCheck_Healthy(t *testing.T) {
 }
 
 func TestCheck_Sealed(t *testing.T) {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(503)
-		_, _ = w.Write([]byte(`{"initialized":true,"sealed":true,"standby":false,"version":"1.15.0"}`))
-	})
-	checker := newTestChecker(t, handler)
+	checker := newTestChecker(t, healthHandler(503,
+		`{"initialized":true,"sealed":true,"standby":false,"version":"1.15.0"}`))
 	s := checker.Check(context.Background())
 	if s.Healthy {
 		t.Fatal("expected unhealthy for sealed vault")
