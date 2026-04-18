@@ -47,3 +47,24 @@ func SecretsToEnv(secrets map[string]string) []string {
 	}
 	return env
 }
+
+// MergeEnv merges Vault-derived env pairs into an existing environment slice.
+// Vault values take precedence: any existing entry with the same key is replaced.
+func MergeEnv(base []string, overrides []string) []string {
+	keys := make(map[string]struct{}, len(overrides))
+	for _, pair := range overrides {
+		if idx := strings.IndexByte(pair, '='); idx > 0 {
+			keys[pair[:idx]] = struct{}{}
+		}
+	}
+	result := make([]string, 0, len(base)+len(overrides))
+	for _, pair := range base {
+		if idx := strings.IndexByte(pair, '='); idx > 0 {
+			if _, overridden := keys[pair[:idx]]; overridden {
+				continue
+			}
+		}
+		result = append(result, pair)
+	}
+	return append(result, overrides...)
+}
