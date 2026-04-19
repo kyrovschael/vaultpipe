@@ -56,3 +56,12 @@ func TestExpand_DoesNotMutateOriginal(t *testing.T) {
 		t.Fatal("original snapshot was mutated")
 	}
 }
+
+func TestExpand_ChainedReferences(t *testing.T) {
+	// Ensure that a value expanded from another key is itself also expanded.
+	snap := Snapshot{"A": "hello", "B": "$A", "C": "$B world"}
+	out := Expand(snap, DefaultExpandOptions())
+	if out["C"] != "hello world" {
+		t.Fatalf("expected \"hello world\", got %q", out["C"])
+	}
+}
