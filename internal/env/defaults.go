@@ -1,34 +1,25 @@
 package env
 
-// DefaultDenyPatterns is the set of environment variable patterns that
-// vaultpipe blocks by default to prevent credential leakage into child
-// processes.
-var DefaultDenyPatterns = []string{
-	// Vault credentials
-	"VAULT_TOKEN",
-	"VAULT_ROLE_ID",
-	"VAULT_SECRET_ID",
+// DefaultEnv returns a Snapshot populated from the current OS environment,
+// filtered through the default deny list and optionally extended with
+// caller-supplied overrides.
+func DefaultEnv(overrides ...Snapshot) (Snapshot, error) {
+	base, err := OSSource()()
+	if err != nil {
+		return Snapshot{}, err
+	}
 
-	// AWS credentials
-	"AWS_ACCESS_KEY_ID",
-	"AWS_SECRET_ACCESS_KEY",
-	"AWS_SESSION_TOKEN",
-	"AWS_SECURITY_TOKEN",
+	dl := DefaultDenyList()
+	filtered := dl.Filter(base)
 
-	// GCP / GKE
-	"GOOGLE_APPLICATION_CREDENTIALS",
-	"GOOGLE_CREDENTIALS",
+	if len(overrides) == 0 {
+		return filtered, nil
+	}
 
-	// GitHub Actions
-	"GITHUB_TOKEN",
-	"ACTIONS_RUNTIME_TOKEN",
-
-	// Generic secrets
-	"SECRET_*",
-	"PRIVATE_*",
-}
-
-// DefaultDenyList returns a DenyList pre-populated with DefaultDenyPatterns.
-func DefaultDenyList() *DenyList {
-	return NewDenyList(DefaultDenyPatterns)
+	opts := DefaultMergeOptions()
+	result := filtered
+	for _, ov := range overrides {
+		result = MergeSnapshots(result, ov, opts)
+	}
+	return result, nil
 }
