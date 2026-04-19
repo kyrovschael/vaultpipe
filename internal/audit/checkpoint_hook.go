@@ -38,3 +38,13 @@ func (h *CheckpointHook) Observe(cp *env.Checkpoint, current env.Snapshot) int {
 	}
 	return len(entries)
 }
+
+// ObserveMultiple runs Observe against each checkpoint in cps and returns the
+// total number of drift entries detected across all checkpoints.
+func (h *CheckpointHook) ObserveMultiple(cps []*env.Checkpoint, current env.Snapshot) int {
+	total := 0
+	for _, cp := range cps {
+		total += h.Observe(cp, current)
+	}
+	return total
+}
