@@ -1,7 +1,8 @@
 package env
 
-// DefaultEnv returns a Snapshot populated from the current OS environment.
+import "os"
+
+// DefaultEnv returns a Snapshot populated from the current process environment.
 func DefaultEnv() Snapshot {
-	s, _ := OSSource().Load()
-	return s
+	return FromSlice(os.Environ())
 }
