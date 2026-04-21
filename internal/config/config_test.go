@@ -88,3 +88,10 @@ secret_id = "s"
 		t.Fatal("expected error when no secret blocks defined")
 	}
 }
+
+func TestLoad_FileNotFound(t *testing.T) {
+	_, err := Load("/nonexistent/path/vaultpipe.toml")
+	if err == nil {
+		t.Fatal("expected error for missing config file")
+	}
+}
