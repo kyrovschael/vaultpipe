@@ -68,3 +68,20 @@ func MergeEnv(base []string, overrides []string) []string {
 	}
 	return append(result, overrides...)
 }
+
+// FilterSecrets returns a new map containing only the keys present in the
+// allowlist. This is useful when a Vault path contains more keys than a
+// process needs, reducing the surface area of the injected environment.
+func FilterSecrets(secrets map[string]string, allow []string) map[string]string {
+	allowSet := make(map[string]struct{}, len(allow))
+	for _, k := range allow {
+		allowSet[k] = struct{}{}
+	}
+	filtered := make(map[string]string, len(allow))
+	for k, v := range secrets {
+		if _, ok := allowSet[k]; ok {
+			filtered[k] = v
+		}
+	}
+	return filtered
+}
