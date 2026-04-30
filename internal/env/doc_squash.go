@@ -1,19 +1,13 @@
-// Package env — SquashSnapshot
+// Package env provides utilities for manipulating environment variable snapshots.
 //
-// SquashSnapshot merges a slice of snapshots into a single snapshot,
-// applying a caller-supplied merge function to resolve key conflicts.
-//
-// Ordering:
-//
-//	Snapshots are processed left-to-right. When two snapshots share a
-//	key the MergeFn decides which value survives (or produces a new one).
-//
-// Default behaviour (MergeFn == nil):
-//
-//	The last value seen for each key wins, equivalent to a right-fold
-//	over the input slice.
+// SquashSnapshot merges all values for keys sharing a common prefix into a
+// single entry, joining them with a configurable separator. This is useful
+// when multiple secret paths contribute fragments that belong together under
+// one environment variable.
 //
 // Example:
 //
-//	out, err := env.SquashSnapshot(env.DefaultSquashOptions(), snaps...)
+//	snap := env.Snapshot{"DB_HOSTS_0": "a", "DB_HOSTS_1": "b", "DB_HOSTS_2": "c"}
+//	out, _ := env.SquashSnapshot(snap, env.DefaultSquashOptions())
+//	// out["DB_HOSTS"] == "a,b,c"
 package env
